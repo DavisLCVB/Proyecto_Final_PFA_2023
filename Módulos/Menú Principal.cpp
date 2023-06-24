@@ -27,6 +27,23 @@ void imprimir_matriz_grafica(int, int, int[], int, int, int, int, char_o_string)
 void ingresar_nombre(string &nom);
 void menu_empleado(string);
 void menu_cliente(string);
+struct VEHICULO
+{
+    string Placa;
+    string Tipo;
+    string Color;
+};
+struct PERSONA
+{
+    string Nombre;
+    int Edad;
+    bool Miembro;
+};
+struct CLIENTE
+{
+    PERSONA Persona;
+    VEHICULO Vehiculo;
+} *Clientes_actuales, C_Temp;
 /*
 En el caso de las matrices que se van a utilizar para imprimir "imágenes", se emplearán arreglos simples con una 
 cantidad de elementos resultado de la multiplicación de las filas y columnas. Esta decisión se tomó con el propósito
@@ -62,16 +79,14 @@ int main()
     system("color F0");                       // Definimos el color de fondo predeterminado como blanco y color de letra negra
     getch();                                  // Pausa antes de ejecutar el programa, puede que se retire en el trabajo final
     Cargando();                               // LLamada a función Cargando()
-    string nombre_principal = "";             // Inicialización del nombre, en este caso, el dato es provisional puesto que
-                                              // debe salir de la estructura principal donde de guardarán los datos
-    menu_principal(nombre_principal);         // LLamada a la función menu_principal(string)
+    menu_principal(C_Temp.Persona.Nombre);         // LLamada a la función menu_principal(string)
     system("cls");                            // Limpieza de pantalla antes de la siguiente impresión
-    if (comprobar_empleado(nombre_principal)) // La función comprobar_empleado() devuelte true si el nombre ingresado
+    if (comprobar_empleado(C_Temp.Persona.Nombre)) // La función comprobar_empleado() devuelte true si el nombre ingresado
                                               // corresponde a un empleado, esta parte deriva entre el menú para el
                                               // empleado o cliente
-        menu_empleado(nombre_principal);
+        menu_empleado(C_Temp.Persona.Nombre);
     else
-        menu_cliente(nombre_principal);
+        menu_cliente(C_Temp.Persona.Nombre);
     getch();
     return 0;
 }
@@ -368,5 +383,76 @@ void menu_empleado(string nom)
 }
 void menu_cliente(string nom)
 {
-    cout << "Hola " << nom;
+    cout << "Hola " << nom << endl;
+    bool datos_correctos = false;
+    while (!datos_correctos)
+    {
+        string opt;
+        cout << "\nIngresa tus datos, por favor:\n";
+        cout << "Edad:\n>>";
+        while (!(cin >> C_Temp.Persona.Edad) || (C_Temp.Persona.Edad <= 0))
+        {
+            cin.clear();
+            cin.ignore(123, '\n');
+            cout << "Edad inv" << char(160) << "lida\n>>";
+        }
+        cout << "Ahora, brindanos informaci" << char(162) << "n sobre el veh" << char(161) << "culo que deseas estacionar\n";
+        cout << "Ingresa la Placa de tu veh" << char(161) << "culo\n>>";
+        cin >> C_Temp.Vehiculo.Placa;
+        cout << "Ingresa el color de tu veh" << char(161) << "culo\n>>";
+        cin >> C_Temp.Vehiculo.Color;
+        cout << "Selecciona el tipo de veh" << char(161) << "culo\n";
+        C_Temp.Vehiculo.Tipo = menu_tipo_vehiculo();
+        system("cls");
+        cout<<"Nombre: "<<C_Temp.Persona.Nombre<<endl;
+        cout<<"Edad: "<<C_Temp.Persona.Edad<<endl;
+        cout<<"Veh"<<char(161)<<"culo:\n";
+        cout<<"   - Placa: "<<C_Temp.Vehiculo.Placa<<endl;
+        cout<<"   - Color: "<<C_Temp.Vehiculo.Color<<endl;
+        cout<<"   - Tipo: "<<C_Temp.Vehiculo.Tipo<<endl;
+        cout<<"\n"<<char(168)<<"Los datos son correctos? (si/no):\n>>";
+        cin>>opt;
+        for(char &c:opt)
+        {
+            c=toupper(c);
+        }
+        if(opt=="SI")
+        {
+            datos_correctos=true;
+        }
+        else{
+            cout<<"Reiniciando...";
+            Sleep(1000);
+        }
+        system("cls");
+    }
+}
+string menu_tipo_vehiculo()
+{
+    int op;
+    cout << "1. Pesado\n";
+    cout << "2. Liviano\n";
+    cout << "3. Motocicleta\n";
+    cout << "Escoja una opci" << char(162) << "n\n>>";
+    while (!(cin >> op) || ((op > 3) || (op < 1)))
+    {
+        cin.clear();
+        cin.ignore(123, '\n');
+        cout << "Opci" << char(162) << "n inv" << char(160) << "lida\n>>";
+    }
+    switch (op)
+    {
+    case 1:
+        return "Pesado";
+        break;
+    case 2:
+        return "Liviano";
+        break;
+    case 3:
+        return "Motocicleta";
+        break;
+    default:
+        return "";
+        break;
+    }
 }
