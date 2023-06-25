@@ -30,6 +30,8 @@ void menu_empleado(string);
 void menu_cliente(string);
 void ocultar_cursor();
 void reiniciar_C_Temp();
+void Ingreso_datos(string);
+void Estacionar_o_retirar();
 string menu_tipo_vehiculo();
 struct VEHICULO
 {
@@ -300,6 +302,26 @@ void menu_empleado(string nom)
 }
 void menu_cliente(string nom)
 {
+    Ingreso_datos(nom);
+    Estacionar_o_retirar();
+}
+void Estacionar_o_retirar()
+{
+    int op;
+    system("cls");
+    cout << char(168) << "Que desea hacer?:\n";
+    cout << "1. Estacionar mi veh" << char(161) << "culo\n";
+    cout << "2. Retirar mi veh" << char(161) << "culo\n";
+    cout << "\n>>";
+    while (!(cin >> op) || (op < 1) || (op > 2))
+    {
+        cin.clear();
+        cin.ignore(123, '\n');
+        cout << "Opci" << char(162) << "n inv" << char(160) << "lida\n>>";
+    }
+}
+void Ingreso_datos(string nom)
+{
     cout << "Hola " << nom << endl;
     bool datos_correctos = false;
     while (!datos_correctos)
@@ -321,24 +343,26 @@ void menu_cliente(string nom)
         cout << "Selecciona el tipo de veh" << char(161) << "culo\n";
         C_Temp.Vehiculo.Tipo = menu_tipo_vehiculo();
         system("cls");
-        cout<<"Nombre: "<<C_Temp.Persona.Nombre<<endl;
-        cout<<"Edad: "<<C_Temp.Persona.Edad<<endl;
-        cout<<"Veh"<<char(161)<<"culo:\n";
-        cout<<"   - Placa: "<<C_Temp.Vehiculo.Placa<<endl;
-        cout<<"   - Color: "<<C_Temp.Vehiculo.Color<<endl;
-        cout<<"   - Tipo: "<<C_Temp.Vehiculo.Tipo<<endl;
-        cout<<"\n"<<char(168)<<"Los datos son correctos? (si/no):\n>>";
-        cin>>opt;
-        for(char &c:opt)
+        cout << "Nombre: " << C_Temp.Persona.Nombre << endl;
+        cout << "Edad: " << C_Temp.Persona.Edad << endl;
+        cout << "Veh" << char(161) << "culo:\n";
+        cout << "   - Placa: " << C_Temp.Vehiculo.Placa << endl;
+        cout << "   - Color: " << C_Temp.Vehiculo.Color << endl;
+        cout << "   - Tipo: " << C_Temp.Vehiculo.Tipo << endl;
+        cout << "\n"
+             << char(168) << "Los datos son correctos? (si/no):\n>>";
+        cin >> opt;
+        for (char &c : opt)
         {
-            c=toupper(c);
+            c = toupper(c);
         }
-        if(opt=="SI")
+        if (opt == "SI")
         {
-            datos_correctos=true;
+            datos_correctos = true;
         }
-        else{
-            cout<<"Reiniciando...";
+        else
+        {
+            cout << "Reiniciando...";
             Sleep(1000);
         }
         system("cls");
