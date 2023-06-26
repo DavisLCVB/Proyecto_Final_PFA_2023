@@ -9,6 +9,32 @@
 #define TECLA_DERECHA 100
 #define TECLA_IZQUIERDA 97
 using namespace std;
+struct retiro
+{
+    string nombre;
+    string placa;
+    int posicionf;
+    int posicionc;
+    double pago;
+    double tiempo_en_h;
+};
+struct VEHICULO
+{
+    string Placa;
+    string Tipo;
+    string Color;
+};
+struct PERSONA
+{
+    string Nombre;
+    int Edad;
+    bool Miembro;
+};
+struct CLIENTE
+{
+    PERSONA Persona;
+    VEHICULO Vehiculo;
+} *Clientes_actuales = new CLIENTE[16], C_Temp;
 void gotoxy(int, int);
 void color_cnsl(int, int);
 template <class char_o_string>
@@ -35,24 +61,11 @@ int Estacionar_o_retirar();
 void mostrar_est(int[][36]);
 void escoger_lugar();
 void esc_y_mos_est();
+void retiro_veh(retiro);
+void voucher(retiro);
 string menu_tipo_vehiculo();
-struct VEHICULO
-{
-    string Placa;
-    string Tipo;
-    string Color;
-};
-struct PERSONA
-{
-    string Nombre;
-    int Edad;
-    bool Miembro;
-};
-struct CLIENTE
-{
-    PERSONA Persona;
-    VEHICULO Vehiculo;
-} *Clientes_actuales, C_Temp;
+void est_alt(int, int, int);
+void retiro_de_veh();
 int pos_inic_x = 41;
 int pos_inci_y = 2;
 int Estacionamiento[15][36] = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -82,10 +95,12 @@ int Numero_de_grupo[6 * 7] = {0, 0, 0, 0, 0, 0, 0,
                               0, 1, 1, 1, 1, 1, 0,
                               1, 1, 0, 0, 0, 1, 1,
                               0, 1, 1, 1, 1, 1, 0};
+int Estacionamiento_manej[4][4] = {{0, 0, 0, 0},
+                                   {0, 0, 0, 0},
+                                   {0, 0, 0, 0}};
 int main()
 {
     ocultar_cursor();
-    Clientes_actuales = new CLIENTE[16];
     system("color F0");
     bool condicion = true;
     while (condicion)
@@ -217,6 +232,7 @@ bool comprobar_empleado(string &cadena_nombre)
 }
 void Cargando()
 {
+    getch();
     system("cls");
     imprimir_texto(53, 10, 15, 0, "C A R G A N D O . . .");
     for (int col_act1 = 0; col_act1 <= 79; col_act1++)
@@ -320,6 +336,7 @@ void menu_cliente(string nom)
             esc_y_mos_est();
             break;
         case 2:
+            retiro_de_veh();
             break;
         case 3:
             system("cls");
@@ -460,6 +477,7 @@ void escoger_lugar()
 
         if (Estacionamiento[incremento_y][incremento_x] == 3)
             color_cnsl(9, 15);
+
         else
             color_cnsl(9, 9);
         cout << "####";
@@ -523,6 +541,19 @@ void escoger_lugar()
             Estacionamiento[incremento_y][incremento_x + 1] = 3;
             Estacionamiento[incremento_y][incremento_x + 2] = 3;
             Estacionamiento[incremento_y][incremento_x + 3] = 3;
+            cout<<incremento_x<<incremento_x<<endl;
+            if (incremento_x <= 12)
+            {
+                int i = (incremento_x - 6) / 6;
+                int j = (incremento_y - 4) / 2;
+                Estacionamiento_manej[j][i] = 1;
+            }
+            else if (incremento_x >= 20)
+            {
+                int i = (incremento_x - 20) / 6;
+                int j = (incremento_y - 4) / 2;
+                Estacionamiento_manej[j][i+2] = 1;
+            }
             condicion_fin_elecc = false;
         }
         mostrar_est(Estacionamiento);
@@ -533,5 +564,112 @@ void esc_y_mos_est()
     mostrar_est(Estacionamiento);
     escoger_lugar();
     mostrar_est(Estacionamiento);
+    getch();
+}
+void est_alt(int pos_x, int pos_y, int bin)
+{
+    Estacionamiento_manej[pos_x][pos_y] = bin;
+    for (int i = 0; i < 4; i++)
+    {
+        for (int j = 0; j < 4; j++)
+        {
+            int a = Estacionamiento_manej[j][i];
+            if (i <= 2)
+            {
+                if (a == 1)
+                {
+                    Estacionamiento[2 * j + 4][6 * i + 6] = 3;
+                    Estacionamiento[2 * j + 4][6 * i + 7] = 3;
+                    Estacionamiento[2 * j + 4][6 * i + 8] = 3;
+                    Estacionamiento[2 * j + 4][6 * i + 9] = 3;
+                }
+                else if (a == 0)
+                {
+                    Estacionamiento[2 * j + 4][6 * i + 6] = 1;
+                    Estacionamiento[2 * j + 4][6 * i + 7] = 1;
+                    Estacionamiento[2 * j + 4][6 * i + 8] = 1;
+                    Estacionamiento[2 * j + 4][6 * i + 9] = 1;
+                }
+            }
+            else if (i > 2)
+            {
+                if (a == 1)
+                {
+                    Estacionamiento[2 * j + 4][6 * i + 20] = 3;
+                    Estacionamiento[2 * j + 4][6 * i + 21] = 3;
+                    Estacionamiento[2 * j + 4][6 * i + 22] = 3;
+                    Estacionamiento[2 * j + 4][6 * i + 23] = 3;
+                }
+                else if (a == 0)
+                {
+                    Estacionamiento[2 * j + 4][6 * i + 20] = 1;
+                    Estacionamiento[2 * j + 4][6 * i + 21] = 1;
+                    Estacionamiento[2 * j + 4][6 * i + 22] = 1;
+                    Estacionamiento[2 * j + 4][6 * i + 23] = 1;
+                }
+            }
+        }
+    }
+}
+void retiro_de_veh()
+{
+    system("cls");
+    retiro p;
+    bool finalizacion = false;
+    while (!finalizacion)
+    {
+        gotoxy(0, 18);
+        cout << "\tMostrando mapa de estacionamiento  ";
+        mostrar_est(Estacionamiento);
+        gotoxy(0, 19);
+        cout << "\n";
+        int espacio;
+        cout << "Escriba la posici" << char(162) << "n de su veh" << char(161) << "culo (1-16):\n>>";
+        while (!(cin >> espacio) || (espacio < 0) || (espacio > 16))
+        {
+            cin.clear();
+            cin.ignore(123, '\n');
+            cout << "Posici" << char(162) << "n inv" << char(160) << "lida\n>>";
+        }
+        if (espacio == 0)
+        {
+            cout << "Regresando...";
+            Sleep(500);
+            return;
+        }
+        p.posicionc = (espacio - 1) % 4;
+        p.posicionf = (espacio - 1) / 4;
+        if (Estacionamiento_manej[p.posicionf][p.posicionc] == 1)
+        {
+            est_alt(p.posicionf, p.posicionc, 0);
+            finalizacion = true;
+        }
+        else
+        {
+            cout << "\nEse espacio est" << char(160) << " vac" << char(161) << "o";
+        }
+        Sleep(1500);
+        system("cls");
+    }
+    mostrar_est(Estacionamiento);
+    Sleep(500);
+    system("cls");
+    voucher(p);
+}
+void voucher(retiro p)
+{
+    cout << "digite su nombre: ";
+    cin >> p.nombre;
+    cout << "digite su placa: ";
+    cin >> p.placa;
+    cout << "digite el tiempo en horas a establecerse: ";
+    cin >> p.tiempo_en_h;
+    cout << "\n";
+    cout << "\t\tImprimiendo voucher " << endl;
+    cout << " Datos del cliente: " << p.nombre << endl;
+    cout << " Placa de vehiculo: " << p.placa << endl;
+    // cout<<"Tiempo total de servicio: "<<
+    p.pago = 7.5 * p.tiempo_en_h;
+    cout << "\n Total a pagar: " << p.pago;
     getch();
 }
