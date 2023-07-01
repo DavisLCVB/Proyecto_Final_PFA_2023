@@ -43,6 +43,7 @@ struct PERSONA
 };
 struct crono
 {
+    int dia;
     int hora;
     int minu;
     int seg;
@@ -61,11 +62,13 @@ struct CLIENTE
     VEHICULO Vehiculo;
     espacios t;
 } *Clientes_actuales = new CLIENTE[16], C_Temp;
+
 struct senial
 {
     int xpuntero;
     int ypuntero;
 };
+
 senial aux[4][4];
 
 void gotoxy(int, int);
@@ -90,6 +93,8 @@ void menu_empleado(string);
 void establecer_horario(int);
 float hora_salida(int);
 void estacionamiento_detallado();
+void almacenar_cronometros();
+void leer_cronometros();
 void mostrar_crono(int k);
 void mostrar_detalles(int i, int j);
 void reloj();
@@ -107,13 +112,25 @@ void esc_y_mos_est();
 void retiro_veh(retiro);
 void voucher(retiro);
 string menu_tipo_vehiculo();
-void est_alt(int, int, int);
 void retiro_de_veh();
 void Guardar_estacionamiento();
 void Recuperar_estacionamiento();
-void retirar(retiro &);
+void retirar(retiro &, bool &);
 void Guardar_clientes(int);
 void Limpiar_espacio(int);
+int stoin(string);
+float stofl(string);
+void comprobar_miembro(int, string);
+void opciones_miembros();
+void Registro_miembros();
+void agregar_miembro();
+int menu_miembros(const char[], const char *[], int);
+void registro_miembros_archivo();
+void crear_archivo_miembros();
+string comprobar_miembro_duplicado(string);
+bool coinciden_datos(int);
+void inicializar_datos();
+void crear_archivo_clientes();
 int pos_inic_x = 41;
 int pos_inci_y = 2;
 int Estacionamiento[15][36];
@@ -133,8 +150,10 @@ int main()
 {
     ocultar_cursor();
     system("color F0");
+    inicializar_datos();
     leer_estacionamientos();
     Recuperar_estacionamiento();
+    leer_cronometros();
     bool condicion = true;
     while (condicion)
     {
@@ -154,6 +173,7 @@ int main()
         {
             menu_cliente(C_Temp.Persona.Nombre);
         }
+        almacenar_cronometros();
         reiniciar_C_Temp();
     }
     delete[] Clientes_actuales;
@@ -229,6 +249,45 @@ void Recuperar_estacionamiento()
         }
     }
     estacionamiento_archivo.close();
+}
+void comprobar_miembro(int k, string nombre)
+{
+    ifstream archivos_miembros;
+    archivos_miembros.open("miembros.txt", ios::in);
+    if (archivos_miembros.fail())
+    {
+        crear_archivo_miembros();
+        return;
+    }
+    string texto;
+    while (!archivos_miembros.eof())
+    {
+        getline(archivos_miembros, texto);
+        if (texto == nombre)
+        {
+            if (k > 0)
+            {
+                Clientes_actuales[k].Persona.Miembro = true;
+            }
+            else
+            {
+                C_Temp.Persona.Miembro = true;
+            }
+        }
+    }
+    archivos_miembros.close();
+}
+void crear_archivo_miembros()
+{
+    ofstream crear_archivo;
+    crear_archivo.open("miembros.txt", ios::out);
+    if (crear_archivo.fail())
+    {
+        cout << "No se pudo crear el archivo\n";
+        return;
+    }
+    crear_archivo << endl;
+    crear_archivo.close();
 }
 void inicializar_datos()
 {
@@ -332,6 +391,7 @@ bool comprobar_empleado(string &cadena_nombre)
     }
     return (cadena_comprob == "EMP-");
 }
+
 void Cargando()
 {
     getch();
@@ -469,23 +529,26 @@ void leer_estacionamientos()
 {
     ifstream lectura_clientes;
     lectura_clientes.open("Clientes_actuales.txt", ios::in);
+    if (lectura_clientes.fail())
+    {
+        crear_archivo_clientes();
+        return;
+    }
+    string texto;
     for (int i = 0; i < 16; i++)
     {
-        lectura_clientes >> Clientes_actuales[i].Persona.Edad;
+        lectura_clientes >>Clientes_actuales[i].Persona.Edad;
+        lectura_clientes.ignore();
         lectura_clientes >> Clientes_actuales[i].Persona.Miembro;
-        lectura_clientes >> Clientes_actuales[i].Persona.Nombre;
-        lectura_clientes >> Clientes_actuales[i].Vehiculo.Color;
-        lectura_clientes >> Clientes_actuales[i].Vehiculo.Placa;
-        lectura_clientes >> Clientes_actuales[i].Vehiculo.Tipo;
-        for (int j = 0; j < 4; j++)
-        {
-            lectura_clientes >> Clientes_actuales[i].t.momento[j].hora;
-            lectura_clientes >> Clientes_actuales[i].t.momento[j].minu;
-            lectura_clientes >> Clientes_actuales[i].t.momento[j].seg;
-        }
-        lectura_clientes >> Clientes_actuales[i].t.ocupado;
-        lectura_clientes >> Clientes_actuales[i].t.x;
-        lectura_clientes >> Clientes_actuales[i].t.y;
+        lectura_clientes.ignore();
+        getline(lectura_clientes,texto);
+        Clientes_actuales[i].Persona.Nombre=texto;
+        getline(lectura_clientes,texto);
+        Clientes_actuales[i].Vehiculo.Color=texto;
+        getline(lectura_clientes,texto);
+        Clientes_actuales[i].Vehiculo.Placa=texto;
+        getline(lectura_clientes,texto);
+        Clientes_actuales[i].Vehiculo.Tipo=texto;
     }
     // ESTO SE DEBE HACER POR ARCHIVOS, POR LO CUAL AUN ES TEMPORAL
     // Establecemos las coordenadas (x,y) desde donde se colocaran los relojes
@@ -526,11 +589,77 @@ void leer_estacionamientos()
     {
         for (int j = 0; j < 4; j++)
         {
-            aux[i][j] = {Clientes_actuales[i].t.x + 4, Clientes_actuales[i].t.y + 3};
+            aux[i][j] = {Clientes_actuales[k].t.x + 4, Clientes_actuales[k].t.y + 3};
             k++;
         }
     }
 }
+
+void almacenar_cronometros()
+{
+    ofstream archivo("Cronometros.txt", ios::out);
+
+    if (archivo.fail())
+    {
+        cout << "No se ha podido crear el archivo";
+        return;
+    }
+
+    for (int i = 0; i < 16; i++)
+    {
+        // Momento inicial del reloj i
+        archivo << Clientes_actuales[i].t.momento[0].seg << endl;
+        archivo << Clientes_actuales[i].t.momento[0].minu << endl;
+        archivo << Clientes_actuales[i].t.momento[0].hora << endl;
+        archivo << Clientes_actuales[i].t.momento[0].dia << endl;
+    }
+
+    archivo.close();
+}
+
+void leer_cronometros()
+{
+    ifstream archivo("Cronometros.txt", ios::in);
+
+    if (archivo.fail())
+    {
+
+        archivo.close();
+
+        for (int i = 0; i < 16; i++)
+        {
+            Clientes_actuales[i].t.momento[0].dia = 0;
+            Clientes_actuales[i].t.momento[0].seg = 100;
+            Clientes_actuales[i].t.momento[0].minu = 60;
+            Clientes_actuales[i].t.momento[0].hora = 60;
+        }
+        almacenar_cronometros();
+
+        return;
+    }
+
+    int i = 0;
+    string linea;
+    while (!archivo.eof())
+    {
+        getline(archivo, linea);
+        if (linea == "")
+        {
+            break;
+        }
+        Clientes_actuales[i].t.momento[0].seg = stoin(linea);
+        getline(archivo, linea);
+        Clientes_actuales[i].t.momento[0].minu = stoin(linea);
+        getline(archivo, linea);
+        Clientes_actuales[i].t.momento[0].hora = stoin(linea);
+        getline(archivo, linea);
+        Clientes_actuales[i].t.momento[0].dia = stoin(linea);
+        i++;
+    }
+
+    archivo.close();
+}
+
 void establecer_horario(int k)
 {
     // system("cls");
@@ -539,6 +668,7 @@ void establecer_horario(int k)
     tm *time = localtime(&inicio);
 
     // Asignamos las horas, minutos y segundos al momento inicial
+    Clientes_actuales[k].t.momento[0].dia = time->tm_yday;
     Clientes_actuales[k].t.momento[0].hora = time->tm_hour;
     Clientes_actuales[k].t.momento[0].minu = time->tm_min;
     Clientes_actuales[k].t.momento[0].seg = time->tm_sec;
@@ -554,12 +684,13 @@ float hora_salida(int k)
     // Se crea una estructura tipo tm* (predefinida por libreria <time.c>
     tm *time = localtime(&final);
 
+    Clientes_actuales[k].t.momento[1].dia = time->tm_yday;
     Clientes_actuales[k].t.momento[1].hora = time->tm_hour;
     Clientes_actuales[k].t.momento[1].minu = time->tm_min;
     Clientes_actuales[k].t.momento[1].seg = time->tm_sec;
 
-    int total_final = Clientes_actuales[k].t.momento[1].hora * 3600 + Clientes_actuales[k].t.momento[1].minu * 60 + Clientes_actuales[k].t.momento[1].seg;
-    int total_inicio = Clientes_actuales[k].t.momento[0].hora * 3600 + Clientes_actuales[k].t.momento[0].minu * 60 + Clientes_actuales[k].t.momento[0].seg;
+    int total_final = Clientes_actuales[k].t.momento[1].dia * 86400 + Clientes_actuales[k].t.momento[1].hora * 3600 + Clientes_actuales[k].t.momento[1].minu * 60 + Clientes_actuales[k].t.momento[1].seg;
+    int total_inicio = Clientes_actuales[k].t.momento[0].dia * 86400 + Clientes_actuales[k].t.momento[0].hora * 3600 + Clientes_actuales[k].t.momento[0].minu * 60 + Clientes_actuales[k].t.momento[0].seg;
 
     float diferencia = total_final - total_inicio;
 
@@ -571,6 +702,7 @@ float hora_salida(int k)
 
     return diferencia / 3600;
 }
+
 void estacionamiento_detallado()
 {
     system("cls");
@@ -670,7 +802,6 @@ void reloj()
 
 void seleccionador(int tecla, int &lugar, int opciones, int botonaum, int botondism)
 {
-
     string punto = "----";
 
     if (tecla == botonaum)
@@ -741,8 +872,7 @@ void mostrar_crono(int k)
     // cout<<"Final: "<<t[k].momento[1].hora<<":"<<t[k].momento[1].minu<<":"<<t[k].momento[1].seg<<endl;
 
     // CALCULAMOS EN SEGUNDOS LA CANTIDAD DE SEGUNDOS DESDE INICIADO EL DIA EN QUE SE RETIRARA EL CARRO
-    total_inicio = Clientes_actuales[k].t.momento[0].hora * 3600 + Clientes_actuales[k].t.momento[0].minu * 60 + Clientes_actuales[k].t.momento[0].seg;
-
+    total_inicio = Clientes_actuales[k].t.momento[0].dia * 86400 + Clientes_actuales[k].t.momento[0].hora * 3600 + Clientes_actuales[k].t.momento[0].minu * 60 + Clientes_actuales[k].t.momento[0].seg;
     // Las siguientes funciones toman el tiempo actual del sistema (pc)
     // Almacenan el tiempo actual en una varible tipo time_t
     time_t now = time(NULL);
@@ -750,6 +880,7 @@ void mostrar_crono(int k)
     tm *act = localtime(&now);
 
     // ALMACENAMOS LAS HORAS, MINUTOS Y SEGUNDOS EN EL VECTOR RESPECTIVO
+    Clientes_actuales[k].t.momento[2].dia = act->tm_yday;
     Clientes_actuales[k].t.momento[2].minu = act->tm_min;
     Clientes_actuales[k].t.momento[2].seg = act->tm_sec;
     Clientes_actuales[k].t.momento[2].hora = act->tm_hour;
@@ -759,7 +890,7 @@ void mostrar_crono(int k)
     // cout<<"Actual: "<<t[k].momento[2].hora<<":"<<t[k].momento[2].minu<<":"<<t[k].momento[2].seg<<endl;
 
     // Se calcula la cantidad de segundos que pasaron desde que se inicio el dia hasta la actualidad
-    total_act = Clientes_actuales[k].t.momento[2].hora * 3600 + Clientes_actuales[k].t.momento[2].minu * 60 + Clientes_actuales[k].t.momento[2].seg;
+    total_act = Clientes_actuales[k].t.momento[2].dia * 86400 + Clientes_actuales[k].t.momento[2].hora * 3600 + Clientes_actuales[k].t.momento[2].minu * 60 + Clientes_actuales[k].t.momento[2].seg;
     // gotoxy(t[k].x,t[k].y+3);
     // cout<<total_fin<<" "<<total_act;
 
@@ -856,6 +987,10 @@ void menu_cliente(string nom)
             getch();
             break;
         case 4:
+            system("cls");
+            opciones_miembros();
+            break;
+        case 5:
             condicion_2 = false;
             break;
         default:
@@ -871,9 +1006,10 @@ int Estacionar_o_retirar()
     cout << "1. Estacionar mi veh" << char(161) << "culo\n";
     cout << "2. Retirar mi veh" << char(161) << "culo\n";
     cout << "3. Ver estacionamiento\n";
-    cout << "4. Atras\n";
+    cout << "4. Volverse miembro\n";
+    cout << "5. Atras\n";
     cout << "\n>>";
-    while (!(cin >> op) || (op < 1) || (op > 4))
+    while (!(cin >> op) || (op < 1) || (op > 5))
     {
         cin.clear();
         cin.ignore(123, '\n');
@@ -883,7 +1019,12 @@ int Estacionar_o_retirar()
 }
 void Ingreso_datos(string nom)
 {
-    cout << "Hola " << nom << endl;
+    comprobar_miembro(0, nom);
+    cout << "Hola " << nom;
+    if (C_Temp.Persona.Miembro)
+        cout << " (miembro)\n";
+    else
+        cout << endl;
     bool datos_correctos = false;
     while (!datos_correctos)
     {
@@ -1088,7 +1229,7 @@ void esc_y_mos_est()
     escoger_lugar();
     mostrar_est();
 }
-void retirar(retiro &p)
+void retirar(retiro &p, bool &retiro)
 {
     system("cls");
     Recuperar_estacionamiento();
@@ -1161,10 +1302,6 @@ void retirar(retiro &p)
         }
         if (tecla == ENTER)
         {
-            Estacionamiento[incremento_y][incremento_x] = 1;
-            Estacionamiento[incremento_y][incremento_x + 1] = 1;
-            Estacionamiento[incremento_y][incremento_x + 2] = 1;
-            Estacionamiento[incremento_y][incremento_x + 3] = 1;
             if (incremento_x <= 12)
             {
                 int i = (incremento_x - 6) / 6;
@@ -1177,15 +1314,45 @@ void retirar(retiro &p)
                 int j = (incremento_y - 4) / 2;
                 k = j * 4 + i + 2;
             }
-
+            if (coinciden_datos(k))
+            {
+                Estacionamiento[incremento_y][incremento_x] = 1;
+                Estacionamiento[incremento_y][incremento_x + 1] = 1;
+                Estacionamiento[incremento_y][incremento_x + 2] = 1;
+                Estacionamiento[incremento_y][incremento_x + 3] = 1;
+                retiro = true;
+            }
             condicion_fin_elecc = false;
         }
         mostrar_est();
     }
-    p.posicionc = (k) % 4;
-    p.posicionf = (k) / 4;
-
-    Guardar_estacionamiento();
+    if (retiro)
+    {
+        p.posicionc = (k) % 4;
+        p.posicionf = (k) / 4;
+        Guardar_estacionamiento();
+    }
+    else
+    {
+        system("cls");
+        gotoxy(20, 14);
+        cout << "El veh" << char(161) << "culo no le corresponde o el espacio se encuentra vac" << char(161) << "o\n";
+        getch();
+    }
+}
+bool coinciden_datos(int k)
+{
+    if (C_Temp.Persona.Edad != Clientes_actuales[k].Persona.Edad)
+        return false;
+    if (C_Temp.Persona.Nombre != Clientes_actuales[k].Persona.Nombre)
+        return false;
+    if (C_Temp.Vehiculo.Color != Clientes_actuales[k].Vehiculo.Color)
+        return false;
+    if (C_Temp.Vehiculo.Placa != Clientes_actuales[k].Vehiculo.Placa)
+        return false;
+    if (C_Temp.Vehiculo.Tipo != Clientes_actuales[k].Vehiculo.Tipo)
+        return false;
+    return true;
 }
 void Guardar_clientes(int k)
 {
@@ -1210,32 +1377,51 @@ void Guardar_clientes(int k)
         archivo_clientes << Clientes_actuales[i].Vehiculo.Color << endl;
         archivo_clientes << Clientes_actuales[i].Vehiculo.Placa << endl;
         archivo_clientes << Clientes_actuales[i].Vehiculo.Tipo << endl;
-        for (int j = 0; j < 4; j++)
-        {
-            archivo_clientes << Clientes_actuales[i].t.momento[j].hora << endl;
-            archivo_clientes << Clientes_actuales[i].t.momento[j].minu << endl;
-            archivo_clientes << Clientes_actuales[i].t.momento[j].seg << endl;
-        }
-        archivo_clientes << Clientes_actuales[i].t.ocupado << endl;
-        archivo_clientes << Clientes_actuales[i].t.x << endl;
-        archivo_clientes << Clientes_actuales[i].t.y << endl;
     }
+    archivo_clientes.close();
+}
+void crear_archivo_clientes()
+{
+    ofstream archivo_clientes;
+    archivo_clientes.open("Clientes_actuales.txt", ios::out);
+    if (archivo_clientes.fail())
+    {
+        cout << "No se pudo abrir el archivo\n";
+        return;
+    }
+    for (int i = 0; i < 16; i++)
+    {
+        archivo_clientes << Clientes_actuales[i].Persona.Edad << endl;
+        archivo_clientes << Clientes_actuales[i].Persona.Miembro << endl;
+        archivo_clientes << Clientes_actuales[i].Persona.Nombre << endl;
+        archivo_clientes << Clientes_actuales[i].Vehiculo.Color << endl;
+        archivo_clientes << Clientes_actuales[i].Vehiculo.Placa << endl;
+        archivo_clientes << Clientes_actuales[i].Vehiculo.Tipo << endl;
+    }
+    archivo_clientes.close();
 }
 void retiro_de_veh()
 {
     system("cls");
     retiro p;
+    bool ret = false;
     bool finalizacion = false;
     while (!finalizacion)
     {
-        retirar(p);
+        retirar(p, ret);
         finalizacion = true;
-        Guardar_estacionamiento();
-        Sleep(1500);
-        system("cls");
+        if (ret)
+        {
+            Guardar_estacionamiento();
+            Sleep(1500);
+            system("cls");
+        }
     }
-    Sleep(500);
-    voucher(p);
+    if (ret)
+    {
+        Sleep(500);
+        voucher(p);
+    }
 }
 void voucher(retiro p)
 {
@@ -1254,7 +1440,22 @@ void voucher(retiro p)
     int aux1 = aux;
     aux = aux1;
     p.pago = aux / 1000;
-    cout << "\n Total a pagar: " << p.pago;
+    cout << "\nTotal: " << p.pago;
+    
+    cout<<"\nDescuento: ";
+    if(Clientes_actuales[k].Persona.Miembro)
+    {
+        cout<<"S/."<<p.pago*0.25;
+    }
+    else
+    {
+        cout<<"S/.0";
+    }
+    if(Clientes_actuales[k].Persona.Miembro)
+    {
+        p.pago=p.pago*0.75;
+    }
+    cout << "\nTotal a pagar: S/." << p.pago;
     reiniciar_C_Temp();
     Limpiar_espacio(k);
     Guardar_clientes(k);
@@ -1268,13 +1469,181 @@ void Limpiar_espacio(int k)
     Clientes_actuales[k].Vehiculo.Color = "";
     Clientes_actuales[k].Vehiculo.Placa = "";
     Clientes_actuales[k].Vehiculo.Tipo = "";
-    for (int i = 0; i < 4; i++)
+}
+
+float stofl(string numero)
+{
+
+    float resultado;
+
+    sscanf(numero.c_str(), "%f", &resultado);
+
+    return resultado;
+}
+
+int stoin(string numero)
+{
+    int resultado;
+
+    sscanf(numero.c_str(), "%d", &resultado);
+
+    return resultado;
+}
+void opciones_miembros()
+{
+    bool flag = true;
+    do
     {
-        Clientes_actuales[k].t.momento[i].hora = 0;
-        Clientes_actuales[k].t.momento[i].minu = 0;
-        Clientes_actuales[k].t.momento[i].seg = 0;
+        const char *titulo = "BIENVENIDO AL MENU DE MIEMBROS";
+        const char *inicio[] = {"[1] Registrarse", "[2] Salir"};
+        int opc = menu_miembros(titulo, inicio, 2);
+        switch (opc)
+        {
+        case 1:
+            Registro_miembros();
+            break;
+        case 2:
+            flag = false;
+            break;
+        }
+    } while (flag);
+}
+void Registro_miembros()
+{
+    system("cls");
+    comprobar_miembro(0, C_Temp.Persona.Nombre);
+    switch (C_Temp.Persona.Miembro)
+    {
+    case true:
+        cout << "Usted ya es un miembro\n";
+        break;
+    case false:
+        agregar_miembro();
+        break;
     }
-    Clientes_actuales[k].t.ocupado = 0;
-    Clientes_actuales[k].t.x = 0;
-    Clientes_actuales[k].t.y = 0;
+}
+void agregar_miembro()
+{
+    const char *titulo2 = "...::: CONFIRMAR REGISTRO :::...";
+    const char *miem_o_clien[] = {"[1] ACEPTAR", "[2] RECHAZAR"};
+    switch (menu_miembros(titulo2, miem_o_clien, 2))
+    {
+    case 1:
+        cout << "\nCliente " << C_Temp.Persona.Nombre << " fue agregado a la lista de miembros" << endl;
+        registro_miembros_archivo();
+        break;
+    case 2:
+        cout << "\nRegresando...\n";
+        Sleep(500);
+    default:
+        break;
+    }
+}
+int menu_miembros(const char titulo[], const char *opciones[], int n)
+{
+    int opcionSeleccionada = 1; // Indica la opcionSeleccionada
+    int tecla;
+    bool repite = true; // controla el bucle para regresar a la rutina que lo llamo, al presionar ENTER
+    do
+    {
+        system("cls");
+        gotoxy(0, 0);
+        gotoxy(43, 13 + opcionSeleccionada);
+        cout << char(175) << endl;
+
+        // Imprime el título del menú
+        gotoxy(50, 12);
+        cout << titulo;
+
+        // Imprime las opciones del menú
+        for (int i = 0; i < n; ++i)
+        {
+            gotoxy(45, 14 + i);
+            cout << i + 1 << ") " << opciones[i];
+        }
+        // Solo permite que se ingrese ARRIBA, ABAJO o ENTER
+        do
+        {
+            tecla = getch();
+            // gotoxy(15, 15); cout << "tecla presionada: " << (char)tecla << " = " << tecla;
+        } while (tecla != TECLA_ARRIBA && tecla != TECLA_W && tecla != TECLA_w && tecla != TECLA_ABAJO && tecla != TECLA_S && tecla != TECLA_s && tecla != ENTER);
+
+        switch (tecla)
+        {
+        case TECLA_ARRIBA:
+        case TECLA_W:
+        case TECLA_w: // En caso que se presione ARRIBA
+
+            opcionSeleccionada--;
+            if (opcionSeleccionada < 1)
+            {
+                opcionSeleccionada = n;
+            }
+            break;
+
+        case TECLA_ABAJO:
+        case TECLA_S:
+        case TECLA_s:
+            opcionSeleccionada++;
+            if (opcionSeleccionada > n)
+            {
+                opcionSeleccionada = 1;
+            }
+            break;
+
+        case ENTER:
+            repite = false;
+            break;
+        }
+
+    } while (repite);
+    return opcionSeleccionada;
+}
+void registro_miembros_archivo()
+{
+    ofstream miembros;
+    miembros.open("miembros.txt", ios::app);
+    if (miembros.fail())
+    {
+        cout << "\nEl registro fracas" << char(162) << "\n";
+        return;
+    }
+    string ag = comprobar_miembro_duplicado(C_Temp.Persona.Nombre);
+    miembros << C_Temp.Persona.Nombre << ag << endl;
+    miembros.close();
+    system("cls");
+    gotoxy(50, 14);
+    cout << "REGISTRO EXITOSO";
+    gotoxy(30, 15);
+    cout << "La pr" << char(162) << "xima vez ingrese con el siguiente nombre: " << C_Temp.Persona.Nombre << ag;
+    gotoxy(45, 16);
+    getch();
+}
+string comprobar_miembro_duplicado(string nom)
+{
+    ifstream miembros;
+    miembros.open("miembros.txt", ios::in);
+    string buffer;
+    int i = 0;
+    string n_bus = nom + "*";
+    while (!miembros.eof())
+    {
+        n_bus = nom + "*";
+        for (int j = 0; j < i; j++)
+        {
+            n_bus += "*";
+        }
+        getline(miembros, buffer);
+        if (n_bus == buffer)
+        {
+            i++;
+        }
+    }
+    miembros.close();
+    string agregar = "*";
+    for (int j = 0; j < i; j++)
+    {
+        agregar += "*";
+    }
+    return agregar;
 }
