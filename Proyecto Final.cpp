@@ -7,6 +7,7 @@
 #include <fstream>
 #include <stdio.h>
 #include <string>
+#include <sstream>
 #define TECLA_ARRIBA 72
 #define TECLA_ABAJO 80
 #define ENTER 13
@@ -20,6 +21,8 @@
 #define TECLA_S 83
 #define TECLA_A 65
 #define TECLA_D 68
+
+const int ANCHO = 120;
 
 using namespace std;
 struct retiro
@@ -54,7 +57,7 @@ struct espacios
     int x;
     int y;
     int ocupado;
-    crono momento[4]; // 0 es inicio 1 es final 2 es actual 3 es restante
+    crono momento[4]; // 0 es inicio 1 es final 2 es actual 3 tiempo de permanencia
 };
 struct CLIENTE
 {
@@ -137,6 +140,9 @@ void guardar_historial(int, float, float);
 void imprimir_informe();
 void leer_historial_e_imprimir();
 void guardar_informe(float, int, string, string, string, string, string, string);
+template <typename T>
+string my_to_string(const T&);
+int flecha_seleccionadora(int, int, int, int, int);
 int pos_inic_x = 41;
 int pos_inci_y = 2;
 int Estacionamiento[15][36];
@@ -486,9 +492,8 @@ void reiniciar_C_Temp()
     C_Temp.Vehiculo.Tipo = "";
 }
 void menu_empleado(string nom)
-{
-    cout << "Hola " << nom << endl
-         << endl;
+{   
+    texto_centrado(ANCHO,2,"HOLA" + nom);
     bool seguir = true;
     int opc = 0;
     while (seguir)
@@ -511,10 +516,20 @@ void menu_empleado(string nom)
 }
 int opciones_empleado()
 {
+    int fila = 4;
 
     int eleccion;
     do
     {
+        
+        texto_centrado(ANCHO,fila, "MENU DE OPCIONES PARA EL EMPLEADO");
+        texto_centrado(ANCHO,fila + 3, "1. Generar informe");
+        texto_centrado(ANCHO,fila + 5, "2. Mostrar estacionamiento detallado");
+        texto_centrado(ANCHO,fila + 7, "3. Salir");
+        texto_centrado(ANCHO,fila + 10, "SELECCIONE LA OPCION A EJECUTAR");
+        eleccion = flecha_seleccionadora(1,3,30,7,2);
+
+        /*
         cout << "MENU DE OPCIONES PARA EL EMPLEADO" << endl;
         cout << "1. Generar informe" << endl;
         cout << "2. Mostrar estacionamiento detallado" << endl;
@@ -527,6 +542,7 @@ int opciones_empleado()
             Sleep(3000);
             system("cls");
         }
+        */
     } while (eleccion != 1 && eleccion != 2 && eleccion != 3);
 
     return eleccion;
@@ -621,6 +637,7 @@ void leer_cronometros()
         i++;
     }
 
+    archivo.close();
     // ESTO SE DEBE HACER POR ARCHIVOS, POR LO CUAL AUN ES TEMPORAL
     // Establecemos las coordenadas (x,y) desde donde se colocaran los relojes
     int espaciadox = 41;
@@ -656,7 +673,7 @@ void leer_cronometros()
         }
     }
 
-    archivo.close();
+    
 }
 
 void establecer_horario(int k)
@@ -751,7 +768,6 @@ void dibujo()
 }
 void reloj()
 {
-
     int columna = 0;
     int fila = 0;
     int tecla;
@@ -772,7 +788,6 @@ void reloj()
         clock_t inicio = clock();
 
         // SI DURANTE 0.1 SEGUNDOS NO SE HA DETECTADO EL ENTER, SE SEGUIRAN MOSTRANDO LOS RELOJES
-
         while ((clock() - inicio) / CLOCKS_PER_SEC < 0.1)
         {
             if (cambio == true)
@@ -917,7 +932,7 @@ void mostrar_crono(int k)
     Clientes_actuales[k].t.momento[3].minu = (diferencia - Clientes_actuales[k].t.momento[3].hora * 3600) / 60;
     Clientes_actuales[k].t.momento[3].seg = diferencia - (Clientes_actuales[k].t.momento[3].hora * 3600 + Clientes_actuales[k].t.momento[3].minu * 60);
 
-    // SI AUN EXISTE TIEMPO RESTANTE
+    // SI ESTA ESTACIONADO EL VEHICULO
     if (Clientes_actuales[k].t.momento[0].seg != 100)
     {
         Clientes_actuales[k].t.ocupado = 1;
@@ -938,7 +953,7 @@ void mostrar_crono(int k)
         if (Clientes_actuales[k].t.momento[3].seg < 10)
             cout << "0";
         cout << Clientes_actuales[k].t.momento[3].seg;
-
+        
         gotoxy(Clientes_actuales[k].t.x - 6, Clientes_actuales[k].t.y + 6);
         cout << "        ______";
         gotoxy(Clientes_actuales[k].t.x - 6, Clientes_actuales[k].t.y + 7);
@@ -984,6 +999,7 @@ void menu_cliente(string nom)
         case 4:
             system("cls");
             opciones_miembros();
+            condicion_2 = false;
             break;
         case 5:
             condicion_2 = false;
@@ -997,25 +1013,38 @@ int Estacionar_o_retirar()
 {
     int op;
     system("cls");
-    cout << char(168) << "Que desea hacer?:\n";
+    int fila = 4;
+    texto_centrado(ANCHO,fila, my_to_string(char(168)) + "Que desea hacer?:\n");
+    texto_centrado(ANCHO,fila + 3, "1. Estacionar mi veh" + my_to_string(char(161)) + "culo\n");
+    texto_centrado(ANCHO,fila + 5, "2. Retirar mi veh" + my_to_string(char(161)) + "culo\n");
+    texto_centrado(ANCHO,fila + 7, "3. Ver estacionamiento\n");
+    texto_centrado(ANCHO,fila + 9, "4. Volverse miembro\n");
+    texto_centrado(ANCHO,fila + 11, "5. Atras\n");
+
+    op = flecha_seleccionadora(1,5,35,7,2);
+
+    /*
     cout << "1. Estacionar mi veh" << char(161) << "culo\n";
     cout << "2. Retirar mi veh" << char(161) << "culo\n";
     cout << "3. Ver estacionamiento\n";
     cout << "4. Volverse miembro\n";
     cout << "5. Atras\n";
     cout << "\n>>";
+    
     while (!(cin >> op) || (op < 1) || (op > 5))
     {
         cin.clear();
         cin.ignore(123, '\n');
         cout << "Opci" << char(162) << "n inv" << char(160) << "lida\n>>";
     }
+    */
     return op;
 }
 void Ingreso_datos(string nom)
 {
     comprobar_miembro(0, nom);
-    cout << "Hola " << nom;
+
+    texto_centrado(ANCHO, 2, "HOLA " + nom);
     if (C_Temp.Persona.Miembro)
         cout << " (miembro)\n";
     else
@@ -1024,22 +1053,58 @@ void Ingreso_datos(string nom)
     while (!datos_correctos)
     {
         string opt;
+        int linea = 3;
+        texto_centrado(ANCHO,linea,"Ingresa tus datos, por favor");
+        texto_centrado(ANCHO,linea + 3,"EDAD    [>]    ");
+        cout<<"\b\b";
+        
+        /*
         cout << "\nIngresa tus datos, por favor:\n";
         cout << "Edad:\n>>";
+        */
         while (!(cin >> C_Temp.Persona.Edad) || (C_Temp.Persona.Edad <= 0))
         {
             cin.clear();
             cin.ignore(123, '\n');
-            cout << "Edad inv" << char(160) << "lida\n>>";
+            texto_centrado(ANCHO,linea + 5,"Edad inv" + my_to_string(char(160)) + "lida");
+            Sleep(1500);
+            texto_centrado(ANCHO,linea + 3,"                                                  ");
+            texto_centrado(ANCHO,linea + 5,"                                                  ");
+            texto_centrado(ANCHO,linea + 3,"EDAD    [>]    "); cout<<"\b\b";
+            //cout << "Edad inv" << char(160) << "lida\n>>";
         }
-        cout << "Ahora, brindanos informaci" << char(162) << "n sobre el veh" << char(161) << "culo que deseas estacionar\n";
-        cout << "Ingresa la Placa de tu veh" << char(161) << "culo\n>>";
+
+        texto_centrado(ANCHO,linea + 5, "Ahora, brindanos informaci" + my_to_string(char(162)) + "n sobre el veh" + my_to_string(char(161)) + "culo que deseas estacionar\n");
+        //cout << "Ahora, brindanos informaci" << char(162) << "n sobre el veh" << char(161) << "culo que deseas estacionar\n";
+        texto_centrado(ANCHO,linea + 7, "Ingresa la Placa de tu veh" + my_to_string(char(161)) + "culo   [>]           ");
+        cout<<"\b\b\b\b\b\b\b";
+        //cout << "Ingresa la Placa de tu veh" << char(161) << "culo\n>>";
         cin >> C_Temp.Vehiculo.Placa;
-        cout << "Ingresa el color de tu veh" << char(161) << "culo\n>>";
+        texto_centrado(ANCHO,linea + 9, "Ingresa el color de tu veh" + my_to_string(char(161)) + "culo   [>]       ");
+        cout<<"\b\b\b";
+        //cout << "Ingresa el color de tu veh" << char(161) << "culo\n>>";
         cin >> C_Temp.Vehiculo.Color;
-        cout << "Selecciona el tipo de veh" << char(161) << "culo\n";
+        texto_centrado(ANCHO,linea + 11, "Selecciona el tipo de veh" + my_to_string(char(161)) + "culo");
+        //cout << "Selecciona el tipo de veh" << char(161) << "culo\n";
         C_Temp.Vehiculo.Tipo = menu_tipo_vehiculo();
+
+
         system("cls");
+        linea = 3;
+        texto_centrado(ANCHO,linea - 2, "ESTAMOS ENCANTADOS DE TENERLO/A AQUI");
+        texto_centrado(ANCHO, linea, "Nombre:                    ");
+        cout<<"\b\b\b\b\b"<<C_Temp.Persona.Nombre;
+        texto_centrado(ANCHO, linea + 2, "Edad:                      ");
+        cout<<"\b\b\b\b\b"<<C_Temp.Persona.Edad;
+        texto_centrado(ANCHO, linea + 5, "Veh" + my_to_string(char(161)) + "culo:\n");
+        texto_centrado(ANCHO, linea + 7, "- Placa:            ");
+        cout<<"\b\b\b\b"<<C_Temp.Vehiculo.Placa ;
+        texto_centrado(ANCHO, linea + 9, "- Color:            ");
+        cout<<"\b\b\b\b"<<C_Temp.Vehiculo.Color;
+        texto_centrado(ANCHO, linea + 11, "- Tipo:             ");
+        cout<<"\b\b\b\b"<<C_Temp.Vehiculo.Tipo;
+
+        /*
         cout << "Nombre: " << C_Temp.Persona.Nombre << endl;
         cout << "Edad: " << C_Temp.Persona.Edad << endl;
         cout << "Veh" << char(161) << "culo:\n";
@@ -1048,6 +1113,9 @@ void Ingreso_datos(string nom)
         cout << "   - Tipo: " << C_Temp.Vehiculo.Tipo << endl;
         cout << "\n"
              << char(168) << "Los datos son correctos? (si/no):\n>>";
+             */
+        texto_centrado(ANCHO,linea+13,"Los datos son correctos? (si/no):      [>]      ");
+        cout<<"\b\b\b\b";
         cin >> opt;
         for (char &c : opt)
         {
@@ -1059,7 +1127,8 @@ void Ingreso_datos(string nom)
         }
         else
         {
-            cout << "Reiniciando...";
+            texto_centrado(ANCHO,linea + 10, "Reiniciando...");
+            //cout << ;
             Sleep(1000);
         }
         system("cls");
@@ -1068,16 +1137,25 @@ void Ingreso_datos(string nom)
 string menu_tipo_vehiculo()
 {
     int op;
+    int linea = 3;
+    texto_centrado(ANCHO,linea + 13, "1. Pesado\n");
+    texto_centrado(ANCHO,linea + 14, "2. Liviano\n");
+    texto_centrado(ANCHO,linea + 15, "3. Motocicleta\n");
+    texto_centrado(ANCHO,linea + 17, "Escoja una opci" + my_to_string(char(162)) + "n con las flechitas");
+    op = flecha_seleccionadora(1,3,30,16,1);
+    /*
     cout << "1. Pesado\n";
     cout << "2. Liviano\n";
     cout << "3. Motocicleta\n";
     cout << "Escoja una opci" << char(162) << "n\n>>";
+    
     while (!(cin >> op) || ((op > 3) || (op < 1)))
     {
         cin.clear();
         cin.ignore(123, '\n');
         cout << "Opci" << char(162) << "n inv" << char(160) << "lida\n>>";
     }
+    */
     switch (op)
     {
     case 1:
@@ -1426,20 +1504,38 @@ void voucher(retiro p)
     // cin >> p.tiempo_en_h;
     string tiempo;
     tiempo = to_string(Clientes_actuales[k].t.momento[3].hora) + ":" + to_string(Clientes_actuales[k].t.momento[3].minu) + ":" + to_string(Clientes_actuales[k].t.momento[3].seg);
-    cout << "\n";
+
+    int linea = 3;
+    texto_centrado(ANCHO,linea, "Imprimiendo voucher");
+    texto_centrado(ANCHO,linea + 3, "Tiempo estacionado:                 ");
+    cout<<"\b\b\b\b\b\b\b"<<tiempo;
+    texto_centrado(ANCHO,linea + 5, "Datos del cliente:                  ");
+    cout<<"\b\b\b\b\b\b\b"<<Clientes_actuales[k].Persona.Nombre;
+    texto_centrado(ANCHO,linea + 7, "Placa de vehiculo:                  ");
+    cout<<"\b\b\b\b\b\b\b"<<Clientes_actuales[k].Vehiculo.Placa;
+    p.pago = 750 * p.tiempo_en_h;
+    texto_centrado(ANCHO,linea + 9, "Tiempo total de servicio:           ");
+    cout<<"\b\b\b\b\b\b\b"<<p.tiempo_en_h;
+    /*
     cout << "\t\tImprimiendo voucher " << endl;
     cout << "Tiempo estacionado: " << tiempo << endl;
     cout << "Datos del cliente: " << Clientes_actuales[k].Persona.Nombre << endl;
     cout << "Placa de vehiculo: " << Clientes_actuales[k].Vehiculo.Placa << endl;
+    */
     // cout<<"Tiempo total de servicio: "<<
-    p.pago = 750 * p.tiempo_en_h;
+    
     float aux = p.pago * 1000;
     int aux1 = aux;
     aux = aux1;
     p.pago = aux / 1000;
-    cout << "\nTotal: " << p.pago;
 
-    cout << "\nDescuento: ";
+    texto_centrado(ANCHO,linea + 10, "Total:                            ");
+    cout<<"\b\b\b\b\b\b\bS/."<<p.pago;
+    //cout << "\nTotal: " << p.pago;
+    texto_centrado(ANCHO,linea + 12, "Descuento:                        ");
+    cout<<"\b\b\b\b\b\b\b";
+    //cout << "\nTotal: " << p.pago;
+    //cout << "\nDescuento: ";
     if (Clientes_actuales[k].Persona.Miembro)
     {
         cout << "S/." << p.pago * 0.25;
@@ -1452,7 +1548,10 @@ void voucher(retiro p)
     {
         p.pago = p.pago * 0.75;
     }
-    cout << "\nTotal a pagar: S/." << p.pago;
+
+    texto_centrado(ANCHO,linea + 14, "Total a pagar:                    ");
+    cout<<"\b\b\b\b\b\b\bS/."<<p.pago;
+    //cout << "\nTotal a pagar: S/." << p.pago;
     // guardar_historial(k, p.pago, tiempo, p.tiempo_en_h);
     guardar_historial(k, p.pago, p.tiempo_en_h);
     reiniciar_C_Temp();
@@ -1506,12 +1605,14 @@ void opciones_miembros()
         {
         case 1:
             Registro_miembros();
+            flag = false;
             break;
         case 2:
             flag = false;
             break;
         }
     } while (flag);
+
 }
 void Registro_miembros()
 {
@@ -1520,7 +1621,8 @@ void Registro_miembros()
     switch (C_Temp.Persona.Miembro)
     {
     case true:
-        cout << "Usted ya es un miembro\n";
+        texto_centrado(ANCHO,9,"Usted ya es un miembro");
+        //cout << "Usted ya es un miembro\n";
         break;
     case false:
         agregar_miembro();
@@ -1538,7 +1640,8 @@ void agregar_miembro()
         registro_miembros_archivo();
         break;
     case 2:
-        cout << "\nRegresando...\n";
+        texto_centrado(ANCHO,14,"  Regresando...");
+        //cout << "\nRegresando...\n";
         Sleep(500);
     default:
         break;
@@ -1553,17 +1656,17 @@ int menu_miembros(const char titulo[], const char *opciones[], int n)
     {
         system("cls");
         gotoxy(0, 0);
-        gotoxy(43, 13 + opcionSeleccionada);
+        gotoxy(43, 9 + opcionSeleccionada);
         cout << char(175) << endl;
 
         // Imprime el título del menú
-        gotoxy(50, 12);
+        gotoxy(50, 7);
         cout << titulo;
 
         // Imprime las opciones del menú
         for (int i = 0; i < n; ++i)
         {
-            gotoxy(45, 14 + i);
+            gotoxy(45, 10 + i);
             cout << i + 1 << ") " << opciones[i];
         }
         // Solo permite que se ingrese ARRIBA, ABAJO o ENTER
@@ -1617,12 +1720,15 @@ void registro_miembros_archivo()
     miembros << C_Temp.Persona.Nombre << ag << endl;
     miembros.close();
     system("cls");
-    gotoxy(50, 14);
-    cout << "REGISTRO EXITOSO";
-    gotoxy(30, 15);
-    cout << "La pr" << char(162) << "xima vez ingrese con el siguiente nombre: " << C_Temp.Persona.Nombre << ag;
-    gotoxy(45, 16);
+    texto_centrado(ANCHO,9,"REGISTRO EXITOSO");
+    //gotoxy(50, 9);
+    //cout << "REGISTRO EXITOSO";
+    texto_centrado(ANCHO,11,"La pr" + my_to_string(char(162)) + "xima vez ingrese con el siguiente nombre: " + C_Temp.Persona.Nombre + ag);
+    //gotoxy(30, 13);
+    //cout << "La pr" << char(162) << "xima vez ingrese con el siguiente nombre: " << C_Temp.Persona.Nombre << ag;
+    //gotoxy(45, 15);
     getch();
+    return;
 }
 string comprobar_miembro_duplicado(string nom)
 {
@@ -1709,6 +1815,11 @@ void imprimir_informe()
 }
 void leer_historial_e_imprimir()
 {
+    string nombre, placa, nombre_min, placa_min, nombre_max, placa_max, tiempo, hora_min, hora_max;
+    float pago, Pago_total = 0, horas, horamin, horamax;
+    bool temp = true;
+    int clientestotales = 0;
+
     ifstream leer_historial;
     leer_historial.open("historial.txt", ios::in);
     if (leer_historial.fail())
@@ -1716,10 +1827,7 @@ void leer_historial_e_imprimir()
         cout << "No hay historial\n";
         return;
     }
-    string nombre, placa, nombre_min, placa_min, nombre_max, placa_max, tiempo, hora_min, hora_max;
-    float pago, Pago_total = 0, horas, horamin, horamax;
-    bool temp = true;
-    int clientestotales = 0;
+
     while (!leer_historial.eof())
     {
         getline(leer_historial, nombre);
@@ -1757,7 +1865,38 @@ void leer_historial_e_imprimir()
         Pago_total += pago;
         clientestotales++;
     }
+
     leer_historial.close();
+    
+    
+    int linea = 3;
+    texto_centrado(ANCHO,linea, "Informe de ventas");
+    texto_centrado(ANCHO,linea + 1, "---------------------------------");
+    texto_centrado(ANCHO,linea + 3, "Empresa: APARKED                             Fecha:04/07/2023");
+    texto_centrado(ANCHO,linea + 5, "Total de ganacias percibidas:            ");
+    cout<<"\b\b\b\bS/."<< Pago_total;
+    texto_centrado(ANCHO,linea + 7, "Clientes totales:                        ");
+    cout<<"\b\b\b\b"<< clientestotales;
+    texto_centrado(ANCHO,linea + 9, "Periodo m" + my_to_string(char(160)) + "ximo de estacionamiento");
+    texto_centrado(ANCHO,linea + 10, "Nombre:            ");
+    cout<<"\b\b\b\b"<< nombre_max;
+    texto_centrado(ANCHO,linea + 11, "Placa:             ");
+    cout<<"\b\b\b\b"<< placa_max;
+    texto_centrado(ANCHO,linea + 12, "Tiempo:            ");
+    cout<<"\b\b\b\b"<< hora_max;
+
+    texto_centrado(ANCHO,linea + 14, "Periodo m" + my_to_string(char(161)) + "nimo de estacionamiento");
+    texto_centrado(ANCHO,linea + 15, "Nombre:            ");
+    cout<<"\b\b\b\b"<< nombre_min;
+    texto_centrado(ANCHO,linea + 16, "Placa:             ");
+    cout<<"\b\b\b\b"<< placa_min;
+    texto_centrado(ANCHO,linea + 17, "Tiempo:            ");
+    cout<<"\b\b\b\b"<< hora_min;
+    texto_centrado(ANCHO,linea + 20, "-------- FIN DEL INFORME -------");
+    
+    getch();
+    system("cls");
+    /*
     cout << "\n\tInforme de ventas\n";
     cout << "\t-----------------\n";
     cout << "Empresa: APARKED\t\tFecha:04/07/2023\n";
@@ -1772,10 +1911,11 @@ void leer_historial_e_imprimir()
     cout << "  Placa: " << placa_min << endl;
     cout << "  Tiempo: " << hora_min << endl;
     cout << "Fin del informe";
+    */
     guardar_informe(Pago_total, clientestotales, nombre_max, nombre_min, placa_max, placa_min, hora_min, hora_max);
 }
 void guardar_informe(float PagoT, int CliT, string nmax, string nmmin, string plmax, string plmin, string hmin, string hmax)
-{
+{   
     ofstream guardar;
     guardar.open("Informe.txt", ios::out);
     guardar << "\n\tInforme de ventas\n";
@@ -1792,4 +1932,56 @@ void guardar_informe(float PagoT, int CliT, string nmax, string nmmin, string pl
     guardar << "  Placa: " << plmin << endl;
     guardar << "  Tiempo: " << hmin << endl;
     guardar << "Fin del informe";
+}
+
+template <typename T>
+string my_to_string(const T& numero) {
+    stringstream cadena;
+    cadena << numero;
+	return cadena.str();
+}
+
+int flecha_seleccionadora(int lugar, int opciones, int x, int y, int interlineado)
+{
+    string FLECHA = "---->";
+    gotoxy(x,y); cout<<FLECHA;
+    int tecla;
+    tecla = getch();
+    if (tecla == TECLA_ARRIBA || tecla == TECLA_W || tecla == TECLA_w)
+    {
+    if (lugar == 1)
+    {
+        gotoxy(x, y); cout<<"     ";
+        y += interlineado*(opciones-1);
+        lugar = opciones;
+    }
+    else if (lugar > 1 && lugar <= opciones)
+    {
+        gotoxy(x, y); cout<<"     ";
+        y -= interlineado;
+        lugar--;
+    }
+    }
+    else if (tecla == TECLA_ABAJO || tecla == TECLA_S || tecla == TECLA_s)
+    {
+    if (lugar == opciones)
+    {
+        gotoxy(x, y); cout<<"     ";
+        y -= interlineado*(opciones-1);
+        lugar = 1;
+    }
+    else if (lugar >= 1 && lugar < opciones)
+    {
+        gotoxy(x, y); cout<<"     ";
+        y += interlineado;
+        lugar++;
+    }
+    }
+
+    if(tecla == ENTER){
+        return lugar;
+    }else{
+        return flecha_seleccionadora(lugar,opciones,x,y,interlineado);
+    }
+
 }
