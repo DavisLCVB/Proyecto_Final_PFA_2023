@@ -120,6 +120,7 @@ void Guardar_clientes(int);
 void Limpiar_espacio(int);
 int stoin(string);
 float stofl(string);
+void texto_centrado(int, int, string);
 void comprobar_miembro(int, string);
 void opciones_miembros();
 void Registro_miembros();
@@ -131,6 +132,11 @@ string comprobar_miembro_duplicado(string);
 bool coinciden_datos(int);
 void inicializar_datos();
 void crear_archivo_clientes();
+// void guardar_historial(int, int, string, float);
+void guardar_historial(int, float, float);
+void imprimir_informe();
+void leer_historial_e_imprimir();
+void guardar_informe(float, int, string, string, string, string, string, string);
 int pos_inic_x = 41;
 int pos_inci_y = 2;
 int Estacionamiento[15][36];
@@ -492,7 +498,7 @@ void menu_empleado(string nom)
         {
         case 1:
             system("cls");
-            cout << "ESTE ES UN INFORME";
+            imprimir_informe();
             break;
         case 2:
             estacionamiento_detallado();
@@ -537,61 +543,18 @@ void leer_estacionamientos()
     string texto;
     for (int i = 0; i < 16; i++)
     {
-        lectura_clientes >>Clientes_actuales[i].Persona.Edad;
+        lectura_clientes >> Clientes_actuales[i].Persona.Edad;
         lectura_clientes.ignore();
         lectura_clientes >> Clientes_actuales[i].Persona.Miembro;
         lectura_clientes.ignore();
-        getline(lectura_clientes,texto);
-        Clientes_actuales[i].Persona.Nombre=texto;
-        getline(lectura_clientes,texto);
-        Clientes_actuales[i].Vehiculo.Color=texto;
-        getline(lectura_clientes,texto);
-        Clientes_actuales[i].Vehiculo.Placa=texto;
-        getline(lectura_clientes,texto);
-        Clientes_actuales[i].Vehiculo.Tipo=texto;
-    }
-    // ESTO SE DEBE HACER POR ARCHIVOS, POR LO CUAL AUN ES TEMPORAL
-    // Establecemos las coordenadas (x,y) desde donde se colocaran los relojes
-    int espaciadox = 27;
-    int espaciadoy = -2; // Es -2 porque al escribir se da un aumento de "+4" en la funcion mostrar_crono()
-                         // EN CASO SE QUIERAN MOSTRAR LOS RELOJOS COMPLETOS (INICIO, FINAL, ACTUAL, RESTANTE), COLOCAR 0
-
-    // DETERMINAMOS LOS DATOS PARA CADA ESPACIO DE LOS 16 EXISTENTES
-    for (int i = 0; i < 16; i++)
-    {
-        // coordenadas del reloj i
-        Clientes_actuales[i].t.x = espaciadox;
-        Clientes_actuales[i].t.y = espaciadoy;
-
-        // Momento inicial del reloj i
-        /* Clientes_actuales[i].t.momento[0].seg = 100;
-        Clientes_actuales[i].t.momento[0].minu = 60;
-        Clientes_actuales[i].t.momento[0].hora = 60; */
-        // Momento final del reloj i
-        // t[i].momento[1].seg = 12;
-        // t[i].momento[1].minu = 59;
-        // t[i].momento[1].hora = 23;
-        Clientes_actuales[i].t.ocupado = 0;
-        // EN CASO LAS COORDENDAS X SOBREPASEN LOS 80, SE PASARA A LA SIGUIENTE LINEA
-        if (espaciadox >= 80)
-        {
-            espaciadox = 27;
-            espaciadoy += 6;
-        }
-        else
-        { // CASO CONTRARIO SE AUMENTARA +22 PARA EL SIGUIENTE RELOJ i+1
-            espaciadox += 22;
-        }
-    }
-
-    int k = 0;
-    for (int i = 0; i < 4; i++)
-    {
-        for (int j = 0; j < 4; j++)
-        {
-            aux[i][j] = {Clientes_actuales[k].t.x + 4, Clientes_actuales[k].t.y + 3};
-            k++;
-        }
+        getline(lectura_clientes, texto);
+        Clientes_actuales[i].Persona.Nombre = texto;
+        getline(lectura_clientes, texto);
+        Clientes_actuales[i].Vehiculo.Color = texto;
+        getline(lectura_clientes, texto);
+        Clientes_actuales[i].Vehiculo.Placa = texto;
+        getline(lectura_clientes, texto);
+        Clientes_actuales[i].Vehiculo.Tipo = texto;
     }
 }
 
@@ -624,7 +587,7 @@ void leer_cronometros()
     if (archivo.fail())
     {
 
-        archivo.close();
+        // archivo.close();
 
         for (int i = 0; i < 16; i++)
         {
@@ -634,6 +597,7 @@ void leer_cronometros()
             Clientes_actuales[i].t.momento[0].hora = 60;
         }
         almacenar_cronometros();
+        leer_cronometros();
 
         return;
     }
@@ -655,6 +619,41 @@ void leer_cronometros()
         getline(archivo, linea);
         Clientes_actuales[i].t.momento[0].dia = stoin(linea);
         i++;
+    }
+
+    // ESTO SE DEBE HACER POR ARCHIVOS, POR LO CUAL AUN ES TEMPORAL
+    // Establecemos las coordenadas (x,y) desde donde se colocaran los relojes
+    int espaciadox = 41;
+    int espaciadoy = -3; // Es -2 porque al escribir se da un aumento de "+4" en la funcion mostrar_crono()
+                         // EN CASO SE QUIERAN MOSTRAR LOS RELOJOS COMPLETOS (INICIO, FINAL, ACTUAL, RESTANTE), COLOCAR 0
+
+    // DETERMINAMOS LOS DATOS PARA CADA ESPACIO DE LOS 16 EXISTENTES
+    for (int i = 0; i < 16; i++)
+    {
+        // coordenadas del reloj i
+        Clientes_actuales[i].t.x = espaciadox;
+        Clientes_actuales[i].t.y = espaciadoy;
+        Clientes_actuales[i].t.ocupado = 0;
+        // EN CASO LAS COORDENDAS X SOBREPASEN LOS 80, SE PASARA A LA SIGUIENTE LINEA
+        if (espaciadox >= 94)
+        {
+            espaciadox = 41;
+            espaciadoy += 7;
+        }
+        else
+        { // CASO CONTRARIO SE AUMENTARA +22 PARA EL SIGUIENTE RELOJ i+1
+            espaciadox += 21;
+        }
+    }
+
+    int k = 0;
+    for (int i = 0; i < 4; i++)
+    {
+        for (int j = 0; j < 4; j++)
+        {
+            aux[i][j] = {Clientes_actuales[k].t.x + 2, Clientes_actuales[k].t.y + 4};
+            k++;
+        }
     }
 
     archivo.close();
@@ -715,10 +714,10 @@ void dibujo()
 
     // LINEAS VERTICALES
     // LA PRIMERA SERA EN X= 41 Y = 2
-    int x = 41, y = 2;
+    int x = 55, y = 1;
 
     // El primer for es para escribir en un aumento y+=1 23 veces una serie ' |        |        | '
-    for (int i = 0; i < 23; i++)
+    for (int i = 0; i < 27; i++)
     {
         // El segundo for escribira la serie determinada de '|' cada 21 espacios en x solo 3 veces
         for (int j = 0; j < 3; j++)
@@ -728,12 +727,12 @@ void dibujo()
             x += 21;
         }
         // Pasamos a la siguiente linea
-        x = 41;
+        x = 55;
         y += 1;
     }
 
     // LINEAS HORIZONTALES
-    x = 21;
+    x = 33;
     y = 7;
 
     // Primer for escribira el 'salto' a la siguiente linea con un y+=6
@@ -746,8 +745,8 @@ void dibujo()
             cout << "--";
             x++;
         }
-        x = 21;
-        y += 6;
+        x = 33;
+        y += 7;
     }
 }
 void reloj()
@@ -756,9 +755,9 @@ void reloj()
     int columna = 0;
     int fila = 0;
     int tecla;
-
+    bool cambio = true;
     gotoxy(aux[fila][columna].xpuntero, aux[fila][columna].ypuntero);
-    cout << char(223) << char(223) << char(223);
+    cout << char(223) << char(223) << char(223) << char(223);
 
     // MIENTRAS NO SE PRESIONE ENTER SE MOSTRARAN LOS CRONOMETROS
     do
@@ -776,7 +775,11 @@ void reloj()
 
         while ((clock() - inicio) / CLOCKS_PER_SEC < 0.1)
         {
-            mostrar_detalles(fila, columna);
+            if (cambio == true)
+            {
+                mostrar_detalles(fila, columna);
+                cambio = false;
+            }
 
             if (kbhit())
             {
@@ -784,7 +787,7 @@ void reloj()
                 if (tecla != ENTER && (tecla == TECLA_ARRIBA || tecla == TECLA_ABAJO || tecla == TECLA_DERECHA || tecla == TECLA_IZQUIERDA))
                 {
                     gotoxy(aux[fila][columna].xpuntero, aux[fila][columna].ypuntero);
-                    cout << "   ";
+                    cout << "    ";
                     gotoxy(0, 0);
                     seleccionador(tecla, fila, 4, TECLA_ARRIBA, TECLA_ABAJO);
                     cout << fila;
@@ -792,7 +795,8 @@ void reloj()
                     seleccionador(tecla, columna, 4, TECLA_IZQUIERDA, TECLA_DERECHA);
                     cout << columna;
                     gotoxy(aux[fila][columna].xpuntero, aux[fila][columna].ypuntero);
-                    cout << char(223) << char(223) << char(223);
+                    cout << char(223) << char(223) << char(223) << char(223);
+                    cambio = true;
                     // mostrar_detalles(fila,columna);
                 }
             }
@@ -844,20 +848,33 @@ void seleccionador(int tecla, int &lugar, int opciones, int botonaum, int botond
 
 void mostrar_detalles(int i, int j)
 {
-    int x = 30, y = 26;
+    int x = 0, y = 3;
 
     Sleep(1);
 
-    gotoxy(x, y);
-    cout << "                                       ";
-    gotoxy(x, y);
+    for (int i = 0; i < 20; i++)
+    {
+        gotoxy(x, y + i);
+        cout << "                          ";
+    }
+
     if (Clientes_actuales[i * 4 + j].t.ocupado != 1)
     {
-        cout << "NO SE ENCUENTRA NINGUN CARRO";
+
+        texto_centrado(36, y + 6, "NO SE");
+        texto_centrado(36, y + 9, "ENCUENTRA");
+        texto_centrado(36, y + 12, "NINGUN CARRO");
     }
     else
     {
-        cout << "CARRO TIPO: " << Clientes_actuales[i * 4 + j].Vehiculo.Tipo;
+        texto_centrado(36, y + 5, "CARRO TIPO:");
+        texto_centrado(36, y + 6, Clientes_actuales[i * 4 + j].Vehiculo.Tipo);
+
+        texto_centrado(36, y + 9, "COLOR DEL CARRO:");
+        texto_centrado(36, y + 10, Clientes_actuales[i * 4 + j].Vehiculo.Color);
+
+        texto_centrado(36, y + 13, "PLACA DEL CARRO:");
+        texto_centrado(36, y + 14, Clientes_actuales[i * 4 + j].Vehiculo.Placa);
     }
 }
 
@@ -905,59 +922,37 @@ void mostrar_crono(int k)
     {
         Clientes_actuales[k].t.ocupado = 1;
         // SE MOSTRARAN LAS HORAS, MINUTOS Y SEGUNDOS
-        gotoxy(Clientes_actuales[k].t.x, Clientes_actuales[k].t.y + 4);
+        gotoxy(Clientes_actuales[k].t.x, Clientes_actuales[k].t.y + 5);
         // cout<<"Tiempo restante: ";
         // gotoxy(t[k].x+17,t[k].y+4);
 
         cout << "        ";
-        gotoxy(Clientes_actuales[k].t.x, Clientes_actuales[k].t.y + 4);
+        gotoxy(Clientes_actuales[k].t.x, Clientes_actuales[k].t.y + 5);
         // gotoxy(t[k].x+17,t[k].y+4);
-        cout << Clientes_actuales[k].t.momento[3].hora << ":" << Clientes_actuales[k].t.momento[3].minu << ":" << Clientes_actuales[k].t.momento[3].seg << endl;
+        if (Clientes_actuales[k].t.momento[3].hora < 10)
+            cout << "0";
+        cout << Clientes_actuales[k].t.momento[3].hora << ":";
+        if (Clientes_actuales[k].t.momento[3].minu < 10)
+            cout << "0";
+        cout << Clientes_actuales[k].t.momento[3].minu << ":";
+        if (Clientes_actuales[k].t.momento[3].seg < 10)
+            cout << "0";
+        cout << Clientes_actuales[k].t.momento[3].seg;
 
-        /*POR EL MOMENTO EL CARRO ES MUY GRANDE, SE BUSACAR OTRA FIGURA
-        DIBUJAR CARRO SI EL ESPACIO ESTA OCUPADO
-        gotoxy(t[k].x+5,t[k].y+5);
-        for(int i=1; i<=20;i++){
-            cout<<char(176);
-        }
-        gotoxy(t[k].x+5,t[k].y+6);
-        for(int i=1;i<=5;i++){
-            cout<<char(176);
-        }
-        cout<<char(220)<<char(219)<<char(223)<<char(223)<<char(219)<<char(223)<<char(223)<<char(219)<<char(220);
-        for(int i=1;i<=6;i++){
-            cout<<char(176);
-        }
-        gotoxy(t[k].x+5,t[k].y+7);
-        cout<<char(176)<<char(176);
-        for(int i=1;i<=15;i++){
-            cout<<char(219);
-        }
-        cout<<char(176)<<char(176)<<char(176);
-        gotoxy(t[k].x+5,t[k].y+8);
-        cout<<char(176)<<char(176)<<char(176)<<char(223)<<char(223)<<"0";
-        for(int i=1; i<=6;i++){
-            cout<<char(223);
-        }
-        cout<<"0"<<char(223)<<char(223)<<char(223)<<char(176)<<char(176)<<char(176)<<char(176);
-        gotoxy(t[k].x+5,t[k].y+9);
-        for(int i=1; i<=21; i++){
-            cout<<char(178);
-        }*/
+        gotoxy(Clientes_actuales[k].t.x - 6, Clientes_actuales[k].t.y + 6);
+        cout << "        ______";
+        gotoxy(Clientes_actuales[k].t.x - 6, Clientes_actuales[k].t.y + 7);
+        cout << "   ___/___|___" << char(92) << "___";
+        gotoxy(Clientes_actuales[k].t.x - 6, Clientes_actuales[k].t.y + 8);
+        cout << " (_---_______ _---_)";
+        gotoxy(Clientes_actuales[k].t.x - 6, Clientes_actuales[k].t.y + 9);
+        cout << "   (o)         (o)";
     }
     else
     {
         Clientes_actuales[k].t.ocupado = 0;
-        gotoxy(Clientes_actuales[k].t.x, Clientes_actuales[k].t.y + 4);
+        gotoxy(Clientes_actuales[k].t.x, Clientes_actuales[k].t.y + 5);
         cout << "00:00:00";
-        /*
-        for(int i=0;i<5;i++){
-            for(int j=0; j<21; j++){
-                gotoxy(t[k].x+5+j,t[k].y+5+i);
-                cout<<" ";
-            }
-        }
-        */
     }
 }
 
@@ -1429,33 +1424,37 @@ void voucher(retiro p)
     int k = p.posicionf * 4 + p.posicionc;
     // cout << "digite el tiempo en horas a establecerse: ";
     // cin >> p.tiempo_en_h;
-    cout << "Tiempo de estacionamiento: " << Clientes_actuales[k].t.momento[3].hora << ":" << Clientes_actuales[k].t.momento[3].minu << ":" << Clientes_actuales[k].t.momento[3].seg;
+    string tiempo;
+    tiempo = to_string(Clientes_actuales[k].t.momento[3].hora) + ":" + to_string(Clientes_actuales[k].t.momento[3].minu) + ":" + to_string(Clientes_actuales[k].t.momento[3].seg);
     cout << "\n";
     cout << "\t\tImprimiendo voucher " << endl;
-    cout << " Datos del cliente: " << Clientes_actuales[k].Persona.Nombre << endl;
-    cout << " Placa de vehiculo: " << Clientes_actuales[k].Vehiculo.Placa << endl;
+    cout << "Tiempo estacionado: " << tiempo << endl;
+    cout << "Datos del cliente: " << Clientes_actuales[k].Persona.Nombre << endl;
+    cout << "Placa de vehiculo: " << Clientes_actuales[k].Vehiculo.Placa << endl;
     // cout<<"Tiempo total de servicio: "<<
-    p.pago = 7.5 * p.tiempo_en_h;
+    p.pago = 750 * p.tiempo_en_h;
     float aux = p.pago * 1000;
     int aux1 = aux;
     aux = aux1;
     p.pago = aux / 1000;
     cout << "\nTotal: " << p.pago;
-    
-    cout<<"\nDescuento: ";
-    if(Clientes_actuales[k].Persona.Miembro)
+
+    cout << "\nDescuento: ";
+    if (Clientes_actuales[k].Persona.Miembro)
     {
-        cout<<"S/."<<p.pago*0.25;
+        cout << "S/." << p.pago * 0.25;
     }
     else
     {
-        cout<<"S/.0";
+        cout << "S/.0";
     }
-    if(Clientes_actuales[k].Persona.Miembro)
+    if (Clientes_actuales[k].Persona.Miembro)
     {
-        p.pago=p.pago*0.75;
+        p.pago = p.pago * 0.75;
     }
     cout << "\nTotal a pagar: S/." << p.pago;
+    // guardar_historial(k, p.pago, tiempo, p.tiempo_en_h);
+    guardar_historial(k, p.pago, p.tiempo_en_h);
     reiniciar_C_Temp();
     Limpiar_espacio(k);
     Guardar_clientes(k);
@@ -1488,6 +1487,12 @@ int stoin(string numero)
     sscanf(numero.c_str(), "%d", &resultado);
 
     return resultado;
+}
+
+void texto_centrado(int largo, int linea, string cadena)
+{
+    gotoxy(largo / 2 - cadena.length() / 2, linea);
+    cout << cadena;
 }
 void opciones_miembros()
 {
@@ -1646,4 +1651,145 @@ string comprobar_miembro_duplicado(string nom)
         agregar += "*";
     }
     return agregar;
+}
+/*void guardar_historial(int k, int pago, string tiempo, float tenhoras)
+{
+}*/
+void guardar_historial(int k, float pago, float horas)
+{
+    // TIEMPO
+    string tiempo = "";
+
+    if (Clientes_actuales[k].t.momento[3].hora < 10)
+    {
+        tiempo += "0" + to_string(Clientes_actuales[k].t.momento[3].hora) + ":";
+    }
+    else
+    {
+        tiempo += to_string(Clientes_actuales[k].t.momento[3].hora) + ":";
+    }
+
+    if (Clientes_actuales[k].t.momento[3].minu < 10)
+    {
+        tiempo += "0" + to_string(Clientes_actuales[k].t.momento[3].minu) + ":";
+    }
+    else
+    {
+        tiempo += to_string(Clientes_actuales[k].t.momento[3].minu) + ":";
+    }
+
+    if (Clientes_actuales[k].t.momento[3].seg < 10)
+    {
+        tiempo += "0" + to_string(Clientes_actuales[k].t.momento[3].seg) + ":";
+    }
+    else
+    {
+        tiempo += to_string(Clientes_actuales[k].t.momento[3].seg);
+    }
+
+    FILE *archivo_clientess;
+    archivo_clientess = fopen("historial.txt", "a");
+    if (archivo_clientess == NULL)
+    {
+        printf("No se pudo abrir el archivo de clientes\n");
+        return;
+    }
+
+    // Guardar los datos del cliente actual en el archivo
+    fprintf(archivo_clientess, "%s\n", Clientes_actuales[k].Persona.Nombre.c_str());
+    fprintf(archivo_clientess, "%s\n", Clientes_actuales[k].Vehiculo.Placa.c_str());
+    fprintf(archivo_clientess, "%.4f\n", pago);
+    fprintf(archivo_clientess, "%s\n", tiempo.c_str());
+    fprintf(archivo_clientess, "%f\n", horas);
+    fclose(archivo_clientess);
+}
+void imprimir_informe()
+{
+    leer_historial_e_imprimir();
+}
+void leer_historial_e_imprimir()
+{
+    ifstream leer_historial;
+    leer_historial.open("historial.txt", ios::in);
+    if (leer_historial.fail())
+    {
+        cout << "No hay historial\n";
+        return;
+    }
+    string nombre, placa, nombre_min, placa_min, nombre_max, placa_max, tiempo, hora_min, hora_max;
+    float pago, Pago_total = 0, horas, horamin, horamax;
+    bool temp = true;
+    int clientestotales = 0;
+    while (!leer_historial.eof())
+    {
+        getline(leer_historial, nombre);
+        getline(leer_historial, placa);
+        leer_historial >> pago;
+        leer_historial.ignore();
+        getline(leer_historial, tiempo);
+        leer_historial >> horas;
+        leer_historial.ignore();
+        if (temp)
+        {
+            nombre_min = nombre;
+            nombre_max = nombre;
+            placa_min = placa;
+            placa_max = placa;
+            horamin = horas;
+            horamax = horas;
+            hora_min = tiempo;
+            hora_max = tiempo;
+        }
+        if (horas > horamax)
+        {
+            placa_max = placa;
+            horamax = horas;
+            nombre_max = nombre;
+            hora_max = tiempo;
+        }
+        if (horas < horamin)
+        {
+            placa_min = placa;
+            horamin = horas;
+            nombre_min = nombre;
+            hora_min = tiempo;
+        }
+        Pago_total += pago;
+        clientestotales++;
+    }
+    leer_historial.close();
+    cout << "\n\tInforme de ventas\n";
+    cout << "\t-----------------\n";
+    cout << "Empresa: APARKED\t\tFecha:04/07/2023\n";
+    cout << "Total de ganacias percibidas: " << Pago_total << endl;
+    cout << "Clientes totales: " << clientestotales << endl;
+    cout << "Periodo m" << char(160) << "ximo de estacionamiento\n";
+    cout << "  Nombre: " << nombre_max << endl;
+    cout << "  Placa: " << placa_max << endl;
+    cout << "  Tiempo: " << hora_max << endl;
+    cout << "Periodo m" << char(161) << "nimo de estacionamiento\n";
+    cout << "  Nombre: " << nombre_min << endl;
+    cout << "  Placa: " << placa_min << endl;
+    cout << "  Tiempo: " << hora_min << endl;
+    cout << "Fin del informe";
+    guardar_informe(Pago_total, clientestotales, nombre_max, nombre_min, placa_max, placa_min, hora_min, hora_max);
+}
+void guardar_informe(float PagoT, int CliT, string nmax, string nmmin, string plmax, string plmin, string hmin, string hmax)
+{
+    ofstream guardar;
+    guardar.open("Informe.txt", ios::out);
+    guardar << "\n\tInforme de ventas\n";
+    guardar << "\t-----------------\n";
+    guardar << "Empresa: APARKED\t\tFecha:04/07/2023\n";
+    guardar << "Total de ganacias percibidas: " << PagoT << endl;
+    guardar << "Clientes totales: " << CliT << endl;
+    guardar << "Periodo m" << char(160) << "ximo de estacionamiento\n";
+    guardar << "  Nombre: " << nmax << endl;
+    guardar << "  Placa: " << plmax << endl;
+    guardar << "  Tiempo: " << hmax << endl;
+    guardar << "Periodo m" << char(161) << "nimo de estacionamiento\n";
+    guardar << "  Nombre: " << nmmin << endl;
+    guardar << "  Placa: " << plmin << endl;
+    guardar << "  Tiempo: " << hmin << endl;
+    guardar << "Fin del informe";
 }
